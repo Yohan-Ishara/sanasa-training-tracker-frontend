@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+tr {
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+tr:hover {
+  background-color: #f9fafb;
+  transform: scale(1.01);
+}
+

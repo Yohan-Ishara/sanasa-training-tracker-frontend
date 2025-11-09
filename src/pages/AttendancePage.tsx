@@ -5,12 +5,23 @@ import type { Training } from "../types/Training";
 
 import { getAllStaff } from "../services/staffService";
 import { getAllTrainings } from "../services/trainingService";
+import { assignParticipants } from "../services/attendanceService";
+import toast from "react-hot-toast";
 import { createAttendance, deleteAttendance, getByStaff, getByTraining, getAllAttendance } from "../services/attendanceService";
 
 export default function AttendancePage() {
   const [staff, setStaff] = useState<Staff[]>([]);
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [items, setItems] = useState<Attendance[]>([]);
+  const [selectedStaff, setSelectedStaff] = useState<number[]>([]);
+
+
+  const toggleStaff = (id: number) => {
+    setSelectedStaff(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
 
   const [form, setForm] = useState<Attendance>({
     staff: { id: 0, fullName: "", designation: "" as any }, // designation not used here
@@ -65,6 +76,21 @@ export default function AttendancePage() {
     setItems(res.data);
   };
 
+  const assignSelectedStaff = async () => {
+    if (!form.training?.id) {
+      toast.error("Select a training first!");
+      return;
+    }
+    if (selectedStaff.length === 0) {
+      toast.error("Select at least one staff!");
+      return;
+    }
+    await assignParticipants(form.training.id, selectedStaff);
+    toast.success("Participants assigned successfully!");
+    setSelectedStaff([]);
+  };
+
+
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-semibold">Attendance</h1>
@@ -72,36 +98,43 @@ export default function AttendancePage() {
       {/* Create */}
       <form onSubmit={submit} className="bg-white p-4 rounded shadow grid gap-3 md:grid-cols-3">
         <select className="border p-2 rounded"
-                value={form.staff?.id || 0}
-                onChange={e => {
-                  const id = Number(e.target.value);
-                  const s = staff.find(x => x.id === id);
-                  setForm({ ...form, staff: s ? { id: s.id!, fullName: s.fullName, designation: "" as any } : { id: 0, fullName: "", designation: "" as any } });
-                }}>
+          value={form.staff?.id || 0}
+          onChange={e => {
+            const id = Number(e.target.value);
+            const s = staff.find(x => x.id === id);
+            setForm({ ...form, staff: s ? { id: s.id!, fullName: s.fullName, designation: "" as any } : { id: 0, fullName: "", designation: "" as any } });
+          }}>
           <option value={0}>Select Staff</option>
           {staff.map(s => <option key={s.id} value={s.id}>{s.fullName}</option>)}
         </select>
 
         <select className="border p-2 rounded"
-                value={form.training?.id || 0}
-                onChange={e => {
-                  const id = Number(e.target.value);
-                  const t = trainings.find(x => x.id === id);
-                  setForm({ ...form, training: t ? { id: t.id!, title: t.title } : { id: 0, title: "" } });
-                }}>
+          value={form.training?.id || 0}
+          onChange={e => {
+            const id = Number(e.target.value);
+            const t = trainings.find(x => x.id === id);
+            setForm({ ...form, training: t ? { id: t.id!, title: t.title } : { id: 0, title: "" } });
+          }}>
           <option value={0}>Select Training</option>
           {trainings.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
         </select>
 
         <select className="border p-2 rounded"
-                value={form.status}
-                onChange={e => setForm({ ...form, status: e.target.value })}>
+          value={form.status}
+          onChange={e => setForm({ ...form, status: e.target.value })}>
           <option>Attended</option>
           <option>Absent</option>
           <option>Excused</option>
         </select>
 
         <button type="submit" className="bg-blue-600 text-white rounded px-4 py-2">Mark</button>
+        <button type="button"
+          onClick={assignSelectedStaff}
+          className="bg-green-600 text-white rounded px-4 py-2 mt-2"
+        >
+          Assigns only the checked
+        </button>
+
       </form>
 
       {/* Filters */}
@@ -127,6 +160,7 @@ export default function AttendancePage() {
         <table className="min-w-full text-sm">
           <thead className="bg-gray-100">
             <tr>
+              <th className="p-2 text-left"></th>
               <th className="p-2 text-left">Staff</th>
               <th className="p-2 text-left">Training</th>
               <th className="p-2 text-left">Status</th>
@@ -134,6 +168,19 @@ export default function AttendancePage() {
             </tr>
           </thead>
           <tbody>
+            {staff.map(s => (
+              <tr key={s.id} className="border-t">
+                <td className="p-2 text-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedStaff.includes(s.id!)}
+                    onChange={() => toggleStaff(s.id!)}
+                  />
+                </td>
+                <td className="p-2">{s.fullName}</td>
+                <td className="p-2">{s.role?.roleName}</td>
+              </tr>
+            ))}
             {items.map(a => (
               <tr key={a.id} className="border-t">
                 <td className="p-2">{a.staff?.fullName}</td>
