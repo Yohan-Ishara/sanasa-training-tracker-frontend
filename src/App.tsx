@@ -1,35 +1,38 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter, Routes, Route, NavLink, Navigate } from "react-router-dom";
+import StaffPage from "./pages/StaffPage";
+import TrainingPage from "./pages/TrainingPage";
+import AttendancePage from "./pages/AttendancePage";
+import RolePage from "./pages/RolePage";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const link = "px-3 py-2 rounded hover:bg-blue-50";
+  const active = "bg-blue-600 text-white hover:bg-blue-700";
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div className="min-h-screen bg-gray-50">
+      <BrowserRouter>
+        <header className="bg-white shadow-sm">
+          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="text-lg font-semibold">Sanasa Training Tracker</div>
+            <nav className="flex gap-2">
+              <NavLink to="/roles" className={({isActive}) => `${link} ${isActive ? active : ""}`}>Roles</NavLink>
+              <NavLink to="/staff" className={({isActive}) => `${link} ${isActive ? active : ""}`}>Staff</NavLink>
+              <NavLink to="/training" className={({isActive}) => `${link} ${isActive ? active : ""}`}>Training</NavLink>
+              <NavLink to="/attendance" className={({isActive}) => `${link} ${isActive ? active : ""}`}>Attendance</NavLink>
+            </nav>
+          </div>
+        </header>
 
-export default App
+        <main className="max-w-6xl mx-auto px-4 py-6">
+          <Routes>
+            <Route path="/" element={<Navigate to="/staff" replace />} />
+            <Route path="/roles" element={<RolePage />} />
+            <Route path="/staff" element={<StaffPage />} />
+            <Route path="/training" element={<TrainingPage />} />
+            <Route path="/attendance" element={<AttendancePage />} />
+          </Routes>
+        </main>
+      </BrowserRouter>
+    </div>
+  );
+}
